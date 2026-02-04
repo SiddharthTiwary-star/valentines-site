@@ -1,101 +1,100 @@
 :root{
-  --pink:#ff4d6d; --light:#ffe6f2; --dark:#333; --white:#fff; --shadow:0 10px 30px rgba(255,77,109,.25);
+  --pink:#ff4d6d; --light:#ffe6f2; --dark:#2a2a2a; --white:#ffffff; --muted:#777; --shadow:0 10px 30px rgba(255,77,109,.20);
+  --radius:24px;
 }
 *{box-sizing:border-box}
 html,body{height:100%}
+html{scroll-behavior:smooth}
 body{
-  margin:0; font-family: 'Comic Sans MS', cursive, 'Segoe UI', system-ui, -apple-system, sans-serif;
-  background: var(--light);
-  color:#222; overflow-x:hidden;
+  margin:0; font-family: system-ui,-apple-system,Segoe UI, Roboto, 'Comic Sans MS', cursive, sans-serif;
+  background: var(--light); color:#222; overflow-x:hidden;
 }
-nav{
-  position:sticky; top:0; z-index:1000; background:var(--white); border-bottom:4px solid var(--pink); box-shadow: var(--shadow);
-}
-nav .wrap{max-width:1000px; margin:auto; display:flex; gap:16px; align-items:center; padding:12px 16px;}
-nav a{color:#222; text-decoration:none; font-weight:700; padding:8px 12px; border-radius:999px}
-nav a:hover, nav a.active{background: var(--pink); color:var(--white)}
+a{color:inherit}
 
-.main{max-width:1000px; margin:32px auto; padding:0 16px}
-.card{
-  background:var(--white); border:6px solid var(--pink); border-radius:24px; box-shadow: var(--shadow); padding:28px; text-align:center;
-}
-.btn{display:inline-block; padding:12px 24px; font-weight:800; border:none; border-radius:999px; cursor:pointer; transition:.25s;}
-.btn-primary{background:var(--pink); color:var(--white)}
-.btn-ghost{background:#f0f0f0; color:#555}
-.btn:hover{transform: translateY(-1px); box-shadow:0 6px 20px rgba(0,0,0,.08)}
+/* Header / Nav */
+nav{position:sticky; top:0; z-index:1000; background:var(--white); border-bottom:4px solid var(--pink); box-shadow:var(--shadow)}
+nav .wrap{max-width:1060px; margin:auto; display:flex; align-items:center; gap:12px; padding:10px 16px}
+.brand{font-weight:900; color:var(--pink); letter-spacing:.3px}
+.links{display:flex; flex-wrap:wrap; gap:10px; margin-left:auto}
+.links a{font-weight:700; text-decoration:none; padding:8px 12px; border-radius:999px; white-space:nowrap}
+.links a:hover,.links a.active{background:var(--pink); color:#fff}
+.nav-toggle{display:none; padding:8px 12px; border:2px solid var(--pink); background:#fff; color:var(--pink); border-radius:12px; font-weight:800; cursor:pointer}
 
-/* hearts */
+@media (max-width: 640px){
+  .nav-toggle{display:inline-block}
+  nav .wrap{flex-wrap:wrap}
+  .links{display:none; width:100%; flex-direction:column; margin:8px 0 0}
+  .links.open{display:flex}
+}
+
+/* Layout */
+.main{max-width:1060px; margin:28px auto; padding:0 16px}
+.card{background:var(--white); border:6px solid var(--pink); border-radius:var(--radius); box-shadow:var(--shadow); padding:28px; text-align:center}
+.hero h1{color:var(--pink); margin:0 0 12px}
+.sub{color:var(--muted); margin:0 0 16px}
+.btn{display:inline-block; padding:12px 20px; font-weight:800; border:none; border-radius:999px; cursor:pointer; transition:.2s; text-decoration:none}
+.btn-primary{background:var(--pink); color:#fff}
+.btn-ghost{background:#f3f3f3; color:#555}
+.btn-outline{background:#fff; color:var(--pink); border:2px solid var(--pink)}
+.btn:hover{transform:translateY(-1px); box-shadow:0 6px 20px rgba(0,0,0,.08)}
+
+/* Floating hearts */
 .heart{ position: fixed; color: var(--pink); font-size:20px; animation: float 6s linear forwards; pointer-events:none; left:0; top:0}
 @keyframes float{ 0%{ transform:translate(var(--x,0), 100vh) rotate(0); opacity:1 } 100%{ transform:translate(calc(var(--x,0) + 0px), -10vh) rotate(360deg); opacity:0 } }
 
-/* ---------- Home (Yes/No) ---------- */
-.hero h1{ color:var(--pink); margin:0 0 20px }
-
-/* Give the No button room to move inside the group */
-.btn-group{
-  position: relative;                 /* positioning context for absolute No button */
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-  align-items: center;
-  min-height: 160px;                  /* space to avoid overlap */
-  padding: 12px 8px;                  /* some breathing room */
-}
-
-/* Keep Yes button in normal flow */
-#yesBtn{
-  position: relative;
-  z-index: 1;
-}
-
-/* Runaway No button is absolutely positioned and moves via transform */
-#noBtn{
-  position: absolute;
-  z-index: 2;
-  touch-action: none;                 /* allow pointer/touch logic to take control */
-  will-change: transform;             /* smoother transform-based jumps */
-  transform: translate(0, 0);         /* initial */
-}
-
-#popup{
-  visibility:hidden;
-  position:fixed;
-  bottom:30px;
-  left:50%;
-  transform:translateX(-50%);
-  background: var(--dark);
-  color:#fff;
-  padding:14px 20px;
-  border-radius:12px;
-  font-weight:800;
-  animation: shake .5s;
-  z-index:20
-}
+/* Home: Yes/No */
+.btn-group{position:relative; display:flex; gap:16px; justify-content:center; align-items:center; min-height:200px; padding:16px 10px}
+#yesBtn{position:relative; z-index:1}
+#noBtn{position:absolute; z-index:2; touch-action:none; will-change:transform; transform:translate(40px, 10px)}
+#popup{visibility:hidden; position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:#333; color:#fff; padding:12px 18px; border-radius:12px; font-weight:800; animation:shake .5s; z-index:20}
 @keyframes shake{0%,100%{transform:translate(-50%,0)}25%{transform:translate(calc(-50% - 5px),0)}75%{transform:translate(calc(-50% + 5px),0)}}
-#successCard{ display:none }
+#successCard{display:none}
+.hint{display:block; margin-top:10px; color:var(--pink); font-weight:700; text-decoration:underline; cursor:pointer}
 
-/* Prevent accidental text selection on rapid taps */
-.hero, .btn-group, #noBtn{
-  -webkit-user-select: none;
-  user-select: none;
-}
+/* Timeline */
+.timeline{ display:grid; gap:16px; margin-top:16px; text-align:left}
+.milestone{ background:var(--white); border-left:8px solid var(--pink); padding:12px 16px; border-radius:12px; box-shadow:var(--shadow) }
 
-/* ---------- Story ---------- */
-.timeline{ display:grid; gap:16px; margin-top:16px }
-.milestone{ background:var(--white); border-left:8px solid var(--pink); padding:12px 16px; border-radius:12px; box-shadow: var(--shadow) }
-
-/* ---------- Gallery ---------- */
+/* Gallery */
 .grid{ display:grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap:14px }
-.grid img{ width:100%; height:220px; object-fit:cover; border-radius:14px; border:4px solid var(--pink); box-shadow: var(--shadow) }
+.grid img{ width:100%; height:220px; object-fit:cover; border-radius:14px; border:4px solid var(--pink); box-shadow: var(--shadow); cursor:zoom-in }
 
-/* ---------- Countdown ---------- */
+/* Countdown */
 .counts{ display:grid; grid-template-columns: repeat(4,1fr); gap:12px; max-width:680px; margin: 12px auto }
 .count{ background:var(--white); border:4px solid var(--pink); border-radius:16px; padding:16px; text-align:center; box-shadow:var(--shadow)}
 .count .num{ font-size:40px; font-weight:900; color:var(--pink) }
 
-footer{ text-align:center; padding:24px; color:#777 }
+/* Breadcrumb + next/prev */
+.breadcrumb{max-width:1060px; margin:0 auto; padding:0 16px}
+.breadcrumb a{color:var(--pink); text-decoration:none; font-weight:700}
+.nav-flow{display:flex; justify-content:space-between; gap:12px; margin-top:18px}
 
-/* Small phones: give a little more vertical space */
-@media (max-width: 360px){
-  .btn-group{ min-height: 200px; }
+footer{text-align:center; padding:24px; color:#777}
+
+/* Small phones tweaks */
+@media (max-width: 380px){
+  .btn-group{min-height:220px}
+  .counts{grid-template-columns: repeat(2,1fr)}
+}
+
+/* Reduce motion if user prefers */
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important}
+}
+
+/* ---------------- Lightbox ---------------- */
+.lightbox-backdrop{position:fixed; inset:0; background:rgba(0,0,0,.85); display:none; align-items:center; justify-content:center; z-index:2000}
+.lightbox-backdrop.open{display:flex}
+.lightbox-inner{position:relative; max-width:95vw; max-height:90vh}
+.lightbox-img{max-width:95vw; max-height:90vh; border-radius:12px; border:4px solid var(--pink); box-shadow:var(--shadow); background:#000}
+.lightbox-caption{color:#fff; text-align:center; margin-top:10px; font-weight:700}
+.lightbox-btn{position:absolute; top:50%; transform:translateY(-50%); background:rgba(255,255,255,.18); border:2px solid #fff; color:#fff; font-weight:900; border-radius:999px; width:44px; height:44px; display:flex; align-items:center; justify-content:center; cursor:pointer; user-select:none}
+.lightbox-prev{left:-56px}
+.lightbox-next{right:-56px}
+.lightbox-close{top:-56px; right:-56px; transform:none}
+
+@media (max-width: 640px){
+  .lightbox-prev{left:8px}
+  .lightbox-next{right:8px}
+  .lightbox-close{top:8px; right:8px}
 }
