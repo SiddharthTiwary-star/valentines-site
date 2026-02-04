@@ -3,276 +3,317 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Pixel‑Perfect Valentine — Butku ❤ Bandar</title>
+<title>Pixel Valentine – Butku ❤ Bandar</title>
 <style>
   :root{
     --pink:#ff4d6d; --bg1:#fff0f7; --bg2:#ffe6f2; --ink:#222;
   }
   html,body{height:100%}
   body{
-    margin:0; background: radial-gradient(1100px 700px at 50% 20%, var(--bg1), var(--bg2));
-    color:var(--ink); font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Comic Sans MS', cursive, sans-serif;
-    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; overflow:hidden;
+    margin:0;
+    background: radial-gradient(1200px 800px at 50% 20%, var(--bg1), var(--bg2));
+    color:var(--ink);
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Comic Sans MS', cursive, sans-serif;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+    overflow:hidden;
   }
   header{
-    position:fixed; top:8px; left:8px; right:8px; display:flex; align-items:center; justify-content:space-between; gap:10px;
+    position:fixed; top:8px; left:8px; right:8px; display:flex; align-items:center; gap:10px;
   }
-  .btn{
+  a.btn, button.btn{
     appearance:none; border:none; border-radius:999px; padding:8px 14px; font-weight:800; cursor:pointer;
     background:#fff; color:var(--pink); border:2px solid var(--pink); text-decoration:none;
     box-shadow:0 4px 16px rgba(0,0,0,.08);
   }
-  .btn:hover{ transform:translateY(-1px); box-shadow:0 8px 24px rgba(0,0,0,.12) }
-  canvas{ image-rendering: pixelated; background:#fff; border:6px solid var(--pink); border-radius:22px; box-shadow:0 14px 36px rgba(255,77,109,.25) }
+  a.btn:hover, button.btn:hover{ transform:translateY(-1px); box-shadow:0 8px 24px rgba(0,0,0,.12) }
+
+  .spacer{ flex:1 }
+
+  /* Pixel canvas shell */
+  .frame{
+    background:#fff; border:6px solid var(--pink); border-radius:22px;
+    box-shadow:0 14px 36px rgba(255,77,109,.25);
+    padding:0; line-height:0; /* no extra line height */
+  }
+  canvas{ image-rendering: pixelated; display:block }
+
   footer{ position:fixed; bottom:10px; left:0; right:0; text-align:center; color:#777; font-size:12px }
 </style>
 </head>
 <body>
   <header>
-    index.html← Back</a>
-    <div style="display:flex; gap:8px;">
-      <button class="btn" id="toggleGrid" aria-pressed="false">Grid: Off</button>
-      <button class="btn" id="toggleAnim" aria-pressed="false">Pause</button>
-    </div>
+    <a class="btn" href="index.html" aria-label="Back to Home">← Back</a>
+    <div class="spacer"></div>
+    <button class="btn" id="gridBtn" aria-pressed="false">Grid: Off</button>
+    <button class="btn" id="toggleAnim" aria-pressed="false">Pause</button>
   </header>
 
-  <canvas id="screen" width="160" height="120" aria-label="Pixel animation"></canvas>
+  <div class="frame">
+    <!-- Visible, scaled canvas (we manage size via JS for integer scaling) -->
+    <canvas id="screen" width="192" height="128" aria-label="Pixel Valentine animation"></canvas>
+  </div>
 
   <footer>Made with ❤️ by Siddharth</footer>
 
 <script>
 (() => {
-  // ---------------- Config ----------------
-  const W = 160, H = 120;                 // logical pixel grid (more detail than 128×96)
-  const BG = '#ffffff';
-  const INK = '#000000';
-  const HEART = '#ff4d6d';
+  // ------------------ Constants ------------------
+  // Use a slightly larger logical grid for clean layout headroom.
+  const BASE_W = 192, BASE_H = 128;
+  // Safe area margins (logical pixels) to keep text inside the border:
+  const SAFE = { L: 8, R: 8, T: 8, B: 8 };
 
-  // ---------------- Visible & pixel canvas ----------------
-  const c = document.getElementById('screen');
-  const sctx = c.getContext('2d');
-  const px = document.createElement('canvas'); px.width = W; px.height = H;
-  const ctx = px.getContext('2d', { willReadFrequently: false });
+  // Layout rows (top & bottom text blocks)
+  const TOP_LINES    = ["WILL YOU", "BE MINE"];
+  const BOTTOM_LINES = ["ON THIS", "VALENTINE"];
 
-  // Fit to window with integer scale (no blur)
+  // Text styling (monospace, pixel rasterized)
+  const FONT_FAMILY = "monospace";
+  const FONT_WEIGHT = "bold";
+  const LINE_GAP    = 2;   // logical pixels between lines
+
+  // Stick-figure placement box
+  const FIGURE_BOX = {
+    // occupy the middle band
+    x: SAFE.L,
+    y: SAFE.T + 30,
+    w: BASE_W - SAFE.L - SAFE.R,
+    h: BASE_H - (SAFE.T + 30) - (SAFE.B + 30)
+  };
+
+  // ------------------ Elements & contexts ------------------
+  const screen = document.getElementById('screen');
+  const sctx   = screen.getContext('2d', { alpha: false });
+
+  // Offscreen low-res canvas where we draw "pixels"
+  const px = document.createElement('canvas');
+  px.width = BASE_W; px.height = BASE_H;
+  const ctx = px.getContext('2d', { alpha: false });
+
+  // Controls
+  const btnPause = document.getElementById('toggleAnim');
+  const btnGrid  = document.getElementById('gridBtn');
+
+  // Respect reduced motion
+  const reduceMotion = matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ------------------ Canvas scaling (integer, no blur) ------------------
   function fit() {
-    const scale = Math.max(1, Math.floor(Math.min(window.innerWidth / W, window.innerHeight / H) * 0.96));
-    c.width = W * scale; c.height = H * scale;
-    c.style.width = c.width + 'px'; c.style.height = c.height + 'px';
+    const w = Math.max(320, window.innerWidth  - 40); // padding for frame
+    const h = Math.max(320, window.innerHeight - 120); // minus header/footer space
+    const scaleX = Math.floor(w / BASE_W);
+    const scaleY = Math.floor(h / BASE_H);
+    const scale  = Math.max(1, Math.min(scaleX, scaleY));
+    screen.width  = BASE_W * scale;
+    screen.height = BASE_H * scale;
+    screen.style.width  = screen.width + 'px';
+    screen.style.height = screen.height + 'px';
   }
-  window.addEventListener('resize', fit, {passive:true});
+  window.addEventListener('resize', fit, { passive:true });
   fit();
 
-  // ---------------- Pixel helpers ----------------
-  function clear(color=BG){ ctx.fillStyle=color; ctx.fillRect(0,0,W,H); }
-  function plot(x,y,color=INK){ if(x>=0 && y>=0 && x<W && y<H){ ctx.fillStyle=color; ctx.fillRect(x|0,y|0,1,1); } }
-  function hline(x,y,w,color=INK){ const X=(x|0); for(let i=0;i<w;i++) plot(X+i, y|0, color); }
-  function vline(x,y,h,color=INK){ const Y=(y|0); for(let i=0;i<h;i++) plot(x|0, Y+i, color); }
-  // Bresenham line (1px crisp)
-  function line(x0,y0,x1,y1,color=INK){
-    x0|=0; y0|=0; x1|=0; y1|=0;
-    let dx=Math.abs(x1-x0), sx=x0<x1?1:-1;
-    let dy=-Math.abs(y1-y0), sy=y0<y1?1:-1;
-    let err=dx+dy, e2;
-    while(true){
-      plot(x0,y0,color);
-      if(x0===x1 && y0===y1) break;
-      e2=2*err;
-      if(e2>=dy){ err+=dy; x0+=sx; }
-      if(e2<=dx){ err+=dx; y0+=sy; }
-    }
+  // ------------------ Pixel helpers ------------------
+  function clear(c = '#ffffff') { ctx.fillStyle = c; ctx.fillRect(0,0,BASE_W,BASE_H); }
+  function pLine(x1,y1,x2,y2, color='#000', w=1) {
+    ctx.strokeStyle = color; ctx.lineWidth = w;
+    ctx.beginPath();
+    ctx.moveTo(Math.round(x1)+0.5, Math.round(y1)+0.5);
+    ctx.lineTo(Math.round(x2)+0.5, Math.round(y2)+0.5);
+    ctx.stroke();
   }
-  // Filled circle via scanlines
-  function fillCircle(cx, cy, r, color=INK){
-    cx|=0; cy|=0; r|=0;
-    for(let y=-r; y<=r; y++){
-      const dx=Math.floor(Math.sqrt(r*r - y*y));
-      hline(cx - dx, cy + y, dx*2 + 1, color);
-    }
+  function pRect(x,y,w,h,color){ ctx.fillStyle = color; ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h)); }
+  function pCircle(cx, cy, r, color='#000', fill=false, w=1){
+    ctx.beginPath();
+    ctx.arc(Math.round(cx)+0.5, Math.round(cy)+0.5, r, 0, Math.PI*2);
+    if(fill){ ctx.fillStyle=color; ctx.fill(); }
+    else { ctx.strokeStyle=color; ctx.lineWidth=w; ctx.stroke(); }
   }
-  // Tiny pixel heart (mask-based), size is odd number like 9 or 11
-  function pHeart(cx, cy, size=9, color=HEART){
-    const base = [
-      " .11. .11. ",
-      "1111111111",
-      "1111111111",
-      " 11111111 ",
-      "  111111  ",
-      "   1111   ",
-      "    11    ",
-      "     1    "
-    ]; // 11 columns inc spaces; we'll scale
-    const sx = size/11;
-    for(let r=0;r<base.length;r++){
-      for(let c2=0;c2<base[r].length;c2++){
-        if(base[r][c2]==='1'){
-          // scale each pixel to ~nearest int coverage
-          const x = Math.round(cx - (11/2) + c2);
-          const y = Math.round(cy - (base.length/2) + r);
-          plot(x, y, color);
-          if (sx>=1.4){ plot(x+1,y,color); plot(x,y+1,color); plot(x+1,y+1,color); }
-        }
-      }
-    }
+  function pHeart(x, y, size, color='#ff4d6d') {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x - size*0.3, y, size*0.35, 0, Math.PI*2);
+    ctx.arc(x + size*0.3, y, size*0.35, 0, Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(x - size*0.65, y);
+    ctx.lineTo(x, y + size*0.9);
+    ctx.lineTo(x + size*0.65, y);
+    ctx.closePath();
+    ctx.fill();
   }
 
-  // ---------------- 5×7 bitmap font (caps only we need) ----------------
-  // Glyphs: width 5, height 7, '#' = on. Only the letters we use.
-  const FONT = {
-    'A':[".###.","#...#","#...#","#####","#...#","#...#","#...#"],
-    'B':["####.","#...#","#...#","####.","#...#","#...#","####."],
-    'E':["#####","#....","#....","####.","#....","#....","#####"],
-    'H':["#...#","#...#","#...#","#####","#...#","#...#","#...#"],
-    'I':["#####","..#..","..#..","..#..","..#..","..#..","#####"],
-    'L':["#....","#....","#....","#....","#....","#....","#####"],
-    'M':["#...#","##.##","#.#.#","#.#.#","#...#","#...#","#...#"],
-    'N':["#...#","##..#","#.#.#","#..##","#...#","#...#","#...#"],
-    'O':[".###.","#...#","#...#","#...#","#...#","#...#",".###."],
-    'S':[".####","#....","#....",".###.","....#","....#","####."],
-    'T':["#####","..#..","..#..","..#..","..#..","..#..","..#.."],
-    'U':["#...#","#...#","#...#","#...#","#...#","#...#",".###."],
-    'V':["#...#","#...#","#...#","#...#",".#.#.","..#..","..#.."],
-    'W':["#...#","#...#","#...#","#.#.#","#.#.#","##.##","#...#"],
-    'Y':["#...#","#...#",".#.#.","..#..","..#..","..#..","..#.."],
-    'N':["#...#","##..#","#.#.#","#..##","#...#","#...#","#...#"],
-    ' ':[".....",".....",".....",".....",".....",".....","....."]
-  };
-  // Some letters appear twice in set; ensure all needed keys:
-  FONT['V']=FONT['V']; FONT['A']=FONT['A']; FONT['L']=FONT['L']; FONT['E']=FONT['E']; FONT['N']=FONT['N']; FONT['T']=FONT['T']; FONT['I']=FONT['I']; FONT['O']=FONT['O']; FONT['S']=FONT['S']; FONT['U']=FONT['U']; FONT['B']=FONT['B']; FONT['W']=FONT['W']; FONT['Y']=FONT['Y']; FONT['H']=FONT['H']; FONT['M']=FONT['M'];
-
-  function textWidth(str, scale=1, spacing=1){
-    let w=0;
-    for(const ch of str){ w += 5*scale + spacing; }
-    return w - spacing;
+  // ---------- Pixel text with auto-fit ----------
+  function setFont(pxSize){
+    ctx.font = `${FONT_WEIGHT} ${pxSize}px ${FONT_FAMILY}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = '#111';
   }
-  function drawText(str, x, y, color=INK, align='left', scale=1, spacing=1){
-    const total = textWidth(str, scale, spacing);
-    let cx = x|0;
-    if(align==='center') cx = (x|0) - (total>>1);
-    if(align==='right')  cx = (x|0) - total;
-
-    for(const ch of str){
-      const g = FONT[ch] || FONT[' '];
-      for(let row=0; row<7; row++){
-        for(let col=0; col<5; col++){
-          if(g[row][col]==='#'){
-            for(let sy=0; sy<scale; sy++)
-              for(let sx=0; sx<scale; sx++)
-                plot(cx + col*scale + sx, y + row*scale + sy, color);
-          }
-        }
-      }
-      cx += 5*scale + spacing;
+  function measureLine(line, pxSize){
+    setFont(pxSize);
+    return ctx.measureText(line).width;
+  }
+  function fitBlock(lines, maxWidth, minSize=6, maxSize=12){
+    // Find the largest size where the **widest** line fits the safe width
+    let size = maxSize;
+    while (size > minSize){
+      const widest = Math.max(...lines.map(l => measureLine(l, size)));
+      if (widest <= maxWidth) break;
+      size--;
     }
+    return size;
+  }
+  function drawBlockCentered(lines, centerX, topY, maxWidth){
+    const size = fitBlock(lines, maxWidth);
+    setFont(size);
+    // Height of the block
+    const totalH = lines.length * size + (lines.length - 1) * LINE_GAP;
+    let y = Math.round(topY);
+    for (let i=0;i<lines.length;i++){
+      ctx.fillText(lines[i], Math.round(centerX), y);
+      y += size + LINE_GAP;
+    }
+    return { size, height: totalH };
   }
 
-  // ---------------- Animation data ----------------
+  // ------------------ Background pixel hearts ------------------
   const hearts = [];
-  function spawnHeart(){ hearts.push({ x: Math.floor(Math.random()*W), y: H+6, vy: 0.4 + Math.random()*0.4, life:0 }); }
-  let gridOn = false;
-  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function spawnHeart() {
+    hearts.push({
+      x: Math.random()*BASE_W,
+      y: BASE_H + 8,
+      vy: 0.25 + Math.random()*0.35,
+      s: 2 + Math.random()*2,
+      life: 0
+    });
+  }
+  let heartTimer = 0;
+  function drawFloatingHearts(dt) {
+    heartTimer += dt;
+    if (heartTimer > 0.28 && !reduceMotion) { heartTimer = 0; spawnHeart(); }
+    for (let i = hearts.length-1; i >= 0; i--) {
+      const h = hearts[i];
+      h.y -= h.vy;
+      h.life += dt;
+      pHeart(h.x, h.y, h.s, `rgba(255,77,109,${Math.max(0, 1 - h.life*0.65)})`);
+      if (h.y < -10 || h.life > 2.6) hearts.splice(i,1);
+    }
+  }
 
-  // Buttons
-  let running = true;
-  const btnGrid = document.getElementById('toggleGrid');
-  const btnAnim = document.getElementById('toggleAnim');
-  btnGrid.addEventListener('click', ()=>{ gridOn=!gridOn; btnGrid.textContent = gridOn ? 'Grid: On' : 'Grid: Off'; btnGrid.setAttribute('aria-pressed', String(gridOn)); });
-  btnAnim.addEventListener('click', ()=>{ running = !running; btnAnim.textContent = running ? 'Pause' : 'Play'; btnAnim.setAttribute('aria-pressed', String(!running)); if(running){ last = performance.now()/1000; requestAnimationFrame(loop); } });
+  // ------------------ Stick figure ------------------
+  function drawStickFigure(t) {
+    const cx = BASE_W/2;
+    const cy = FIGURE_BOX.y + FIGURE_BOX.h/2 + Math.sin(t*2)*1.2; // gentle bob
+    const sway = Math.sin(t*1.3) * 0.08;
 
-  // ---------------- Figure drawing ----------------
-  function drawFigure(t){
-    const cx = W>>1, baseY = Math.floor(H*0.66);
-    const bob = Math.round(Math.sin(t*2)*1.5);
-    const sway = Math.sin(t*1.1)*2; // small sway in pixels
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(sway);
 
     // Torso
-    line(cx + sway, baseY-18 + bob, cx + sway, baseY + 10 + bob, INK);
+    pLine(0, -18, 0, 10, '#000', 1.2);
 
     // Arms
-    line(cx + sway, baseY-12 + bob, cx - 12 + sway, baseY - 4 + bob, INK); // left akimbo
-    line(cx + sway, baseY -10 + bob, cx + 14 + sway, baseY - 5 + bob, INK); // right to stick
+    pLine(0, -12, -12, -4, '#000', 1.2);
+    pLine(0, -10, 12, -4,  '#000', 1.2); // hand for the heart stick
 
-    // Lollipop stick
-    line(cx + 14 + sway, baseY - 5 + bob, cx + 14 + sway, baseY + 6 + bob, '#555');
+    // Legs & feet
+    pLine(0, 10, -9, 26, '#000', 1.2);
+    pLine(0, 10,  9, 26, '#000', 1.2);
+    pRect(-10, 26, 3, 3, '#000');
+    pRect(  8, 26, 3, 3, '#000');
 
-    // Legs
-    line(cx + sway, baseY + 10 + bob, cx - 9 + sway, baseY + 26 + bob, INK);
-    line(cx + sway, baseY + 10 + bob, cx + 9 + sway, baseY + 26 + bob, INK);
-    // Feet blocks
-    hline(cx - 10 + sway, baseY + 26 + bob, 3, INK);
-    hline(cx + 8 + sway,  baseY + 26 + bob, 3, INK);
+    // Head
+    pCircle(0, -26, 10, '#000', false, 1.2);
 
-    // Head (filled circle in pixels)
-    const headY = baseY - 26 + bob;
-    fillCircle(cx + sway, headY, 9, INK); // outline/solid head silhouette
-    // Make face hole (white) then redraw thin outline for crisp look
-    fillCircle(cx + sway, headY, 8, BG);
     // Eyes (blink)
-    const blink = (Math.floor(t*6) % 24) === 0; // quick blink periodically
-    if(blink){
-      hline(cx - 3 + sway, headY-1, 3, INK);
-      hline(cx + 1 + sway, headY-1, 3, INK);
-    }else{
-      // tiny 2×2 squares
-      plot(cx - 3 + sway, headY-2, INK); plot(cx - 2 + sway, headY-2, INK);
-      plot(cx - 3 + sway, headY-1, INK); plot(cx - 2 + sway, headY-1, INK);
-      plot(cx + 2 + sway, headY-2, INK); plot(cx + 3 + sway, headY-2, INK);
-      plot(cx + 2 + sway, headY-1, INK); plot(cx + 3 + sway, headY-1, INK);
+    const blink = (Math.floor(t*2) % 12) === 0 && (t % 0.8) < 0.08;
+    if (blink) {
+      pRect(-4, -28, 3, 1, '#000');
+      pRect( 3, -28, 3, 1, '#000');
+    } else {
+      pRect(-4, -29, 2, 2, '#000');
+      pRect( 3, -29, 2, 2, '#000');
     }
+
     // Hair spikes
-    vline(cx - 2 + sway, headY-11, 3, INK);
-    vline(cx + 0 + sway, headY-12, 4, INK);
-    vline(cx + 2 + sway, headY-11, 3, INK);
+    pLine(-2, -36, -2, -39, '#000', 1);
+    pLine( 0, -36,  0, -40, '#000', 1);
+    pLine( 2, -36,  2, -39, '#000', 1);
 
-    // Heart candy near mouth (pixel heart mask)
-    const pulse = (Math.sin(t*4)*0.5 + 1.5); // 1.0..2.0
-    pHeart(cx + 8 + sway, headY + 1, Math.round(9*pulse), HEART);
+    // Heart candy at mouth
+    const pulse = 1 + 0.12*Math.sin(t*4);
+    pHeart(8, -26, 6*pulse, '#ff4d6d');
+
+    ctx.restore();
   }
 
-  // ---------------- Main loop ----------------
-  let last = performance.now()/1000, emitter=0;
-  function loop(nowMs){
-    const now = nowMs/1000;
-    const dt = Math.min(0.033, Math.max(0, now - last)); last = now;
+  // ------------------ Optional pixel grid (debug) ------------------
+  let showGrid = false;
+  function drawGrid(){
+    ctx.strokeStyle = 'rgba(0,0,0,.08)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x=0; x<=BASE_W; x+=4){
+      ctx.moveTo(x+0.5, 0); ctx.lineTo(x+0.5, BASE_H);
+    }
+    for (let y=0; y<=BASE_H; y+=4){
+      ctx.moveTo(0, y+0.5); ctx.lineTo(BASE_W, y+0.5);
+    }
+    ctx.stroke();
+  }
+
+  // ------------------ Main loop ------------------
+  let last = performance.now()/1000, running = true;
+
+  btnPause.addEventListener('click', () => {
+    running = !running;
+    btnPause.textContent = running ? 'Pause' : 'Play';
+    btnPause.setAttribute('aria-pressed', String(!running));
+    if (running) { last = performance.now()/1000; requestAnimationFrame(loop); }
+  });
+  btnGrid.addEventListener('click', () => {
+    showGrid = !showGrid;
+    btnGrid.textContent = showGrid ? 'Grid: On' : 'Grid: Off';
+    btnGrid.setAttribute('aria-pressed', String(showGrid));
+  });
+
+  function loop(nowMs) {
+    const now = nowMs/1000, dt = Math.min(0.033, Math.max(0, now - last)); last = now;
+
+    // --- Clear and background ---
+    clear('#ffffff');
+
+    // --- Top text block (auto-fit to safe width) ---
+    const centerX = BASE_W/2;
+    const safeWidth = BASE_W - SAFE.L - SAFE.R;
+    // Place top block just inside top margin
+    const topBlock = drawBlockCentered(TOP_LINES, centerX, SAFE.T, safeWidth);
+
+    // --- Bottom text block (auto-fit) ---
+    // Place bottom block just above bottom margin
+    const bottomHeight = (BOTTOM_LINES.length * 10) + (BOTTOM_LINES.length-1)*LINE_GAP; // estimate
+    drawBlockCentered(BOTTOM_LINES, centerX, BASE_H - SAFE.B - (bottomHeight+4), safeWidth);
+
+    // --- Middle character fits inside FIGURE_BOX ---
     const t = now;
+    drawStickFigure(t);
 
-    clear(BG);
+    // --- Background floating hearts ---
+    if (!reduceMotion) drawFloatingHearts(dt);
 
-    // Top text (5×7 font, scaled)
-    drawText("WILL YOU  BE MINE", W>>1, 6, INK, 'center', 2, 1);
+    // --- Optional grid overlay ---
+    if (showGrid) drawGrid();
 
-    // Figure
-    drawFigure(t);
-
-    // Bottom text
-    drawText("ON THIS  VALENTINE", W>>1, H-20, INK, 'center', 2, 1);
-
-    // Background hearts
-    if(!reduceMotion){
-      emitter += dt;
-      if(emitter > 0.22){ emitter = 0; spawnHeart(); }
-      for(let i=hearts.length-1;i>=0;i--){
-        const h = hearts[i];
-        h.y -= h.vy;
-        pHeart(h.x|0, h.y|0, 7, `rgba(255,77,109,${Math.max(0, (h.y+8)/H)})`);
-        if(h.y < -10) hearts.splice(i,1);
-      }
-    }
-
-    // Optional grid (for verification)
-    if(gridOn){
-      for(let gx=0; gx<W; gx+=8) vline(gx, 0, H, '#eee');
-      for(let gy=0; gy<H; gy+=8) hline(0, gy, W, '#eee');
-    }
-
-    // Blit nearest-neighbor
-    sctx.clearRect(0,0,c.width,c.height);
+    // --- Blit nearest-neighbor to visible canvas ---
+    sctx.clearRect(0,0,screen.width,screen.height);
     sctx.imageSmoothingEnabled = false;
-    sctx.drawImage(px, 0, 0, c.width, c.height);
+    sctx.drawImage(px, 0, 0, screen.width, screen.height);
 
-    if(running) requestAnimationFrame(loop);
+    if (running) requestAnimationFrame(loop);
   }
 
+  // Kick off
   requestAnimationFrame(loop);
 })();
 </script>
