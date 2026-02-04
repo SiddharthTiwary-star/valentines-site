@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Pixel Valentine – Butku ❤ Bandar</title>
+<link rel="stylesheet" href="styles.css?v=3">
+<style>
+  body{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;}
+  header{position:fixed; top:8px; left:8px; right:8px; display:flex; align-items:center; justify-content:space-between; gap:10px}
+  a.btn, button.btn{appearance:none; border:none; border-radius:999px; padding:8px 14px; font-weight:800; cursor:pointer; background:#fff; color:var(--pink); border:2px solid var(--pink); text-decoration:none; box-shadow:0 4px 16px rgba(0,0,0,.08)}
+  a.btn:hover, button.btn:hover{ transform:translateY(-1px); box-shadow:0 8px 24px rgba(0,0,0,.12) }
+  canvas{ image-rendering: pixelated; background:#fff; border:6px solid var(--pink); border-radius:22px; box-shadow:0 14px 36px rgba(255,77,109,.25) }
+  footer{ position:fixed; bottom:10px; left:0; right:0; text-align:center; color:#777; font-size:12px }
+</style>
+</head>
+<body>
+  <nav>
+    <div class="wrap">
+      <div class="brand">Butku ❤ Bandar</div>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Toggle menu">☰ Menu</button>
+      <div class="links" id="nav-links">
+        <a href="index.html">Home</a>
+        <a href="story.html">Our Story</a>
+        <a href="gallery.html">Gallery</a>
+        <a href="playlist.html">Playlist</a>
+        <a href="letter.html">Love Letter</a>
+        <a href="countdown.html">Countdown</a>
+        <a class="active" href="pixel-valentine.html">Pixel Art</a>
+      </div>
+    </div>
+  </nav>
+
+  <header>
+    <a class="btn" href="index.html">← Back Home</a>
+    <button class="btn" id="toggleAnim" aria-pressed="false">Pause</button>
+  </header>
+
+  <!-- Visible, scaled canvas -->
+  <canvas id="screen" width="128" height="96" aria-label="Pixel Valentine animation"></canvas>
+
+  <footer>Made with ❤️ by Siddharth</footer>
+
+<script>
+(() => {
+  const BASE_W = 128, BASE_H = 96;
+  const screen = document.getElementById('screen');
+  const sctx = screen.getContext('2d');
+  const px = document.createElement('canvas');
+  px.width = BASE_W; px.height = BASE_H;
+  const ctx = px.getContext('2d');
+
+  function fit() {
+    const w = window.innerWidth, h = window.innerHeight;
+    const scale = Math.floor(Math.min(w / BASE_W, (h-80) / BASE_H) * 0.95) || 1; // header/footer space
+    screen.width  = BASE_W * scale;
+    screen.height = BASE_H * scale;
+    screen.style.width  = screen.width + 'px';
+    screen.style.height = screen.height + 'px';
+  }
+  window.addEventListener('resize', fit, { passive:true });
+  fit();
+
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function pLine(x1,y1,x2,y2, color='#000', w=1) { ctx.strokeStyle = color; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(Math.round(x1)+0.5, Math.round(y1)+0.5); ctx.lineTo(Math.round(x2)+0.5, Math.round(y2)+0.5); ctx.stroke(); }
+  function pCircle(cx, cy, r, color='#000', fill=false, w=1){ ctx.beginPath(); ctx.arc(Math.round(cx)+0.5, Math.round(cy)+0.5, r, 0, Math.PI*2); if(fill){ ctx.fillStyle=color; ctx.fill(); } else { ctx.strokeStyle=color; ctx.lineWidth=w; ctx.stroke(); } }
+  function pRect(x,y,w,h,color){ ctx.fillStyle = color; ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h)); }
+  function pHeart(x, y, size, color='#ff4d6d') { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x - size*0.3, y, size*0.35, 0, Math.PI*2); ctx.arc(x + size*0.3, y, size*0.35, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.moveTo(x - size*0.65, y); ctx.lineTo(x, y + size*0.9); ctx.lineTo(x + size*0.65, y); ctx.closePath(); ctx.fill(); }
+  function pText(str, x, y, color='#000', align='center', size=7) { ctx.fillStyle = color; ctx.font = `bold ${size}px monospace`; ctx.textAlign = align; ctx.textBaseline = 'top'; ctx.fillText(str, Math.round(x), Math.round(y)); }
+
+  const hearts = []; let heartTimer = 0;
+  function spawnHeart() { hearts.push({ x: Math.random()*BASE_W, y: BASE_H + 8, vy: 0.3 + Math.random()*0.4, s: 2 + Math.random()*2, life: 0 }); }
+
+  function drawStickFigure(t) {
+    const cx = BASE_W*0.5; const groundY = BASE_H*0.66; const bob = Math.sin(t*2) * 1.5; const headBob = Math.sin(t*2 + 0.7) * 1; const sway = Math.sin(t*1.3) * 0.08; const blink = (Math.floor(t) % 5) === 0 && (t % 1) < 0.12;
+    ctx.save(); ctx.translate(cx, groundY + bob); ctx.rotate(sway);
+    pLine(0, -16, 0, 10, '#000', 1.5); // torso
+    pLine(0, -10, -10, -2, '#000', 1.5); // left arm
+    pLine(0, -8, 12, -2, '#000', 1.5);  // right arm
+    pLine(12, -2, 12, 8, '#444', 1);    // lollipop stick
+    pLine(0, 10, -8, 24, '#000', 1.5);  // legs
+    pLine(0, 10, 8, 24, '#000', 1.5);
+    pRect(-9, 24, 3, 3, '#000'); pRect(7, 24, 3, 3, '#000');
+    const headY = -24 + headBob; pCircle(0, headY, 10, '#000', false, 1.5);
+    if ((blink)) { pRect(-4, headY-1, 3, 1, '#000'); pRect(2, headY-1, 3, 1, '#000'); }
+    else { pRect(-4, headY-2, 2, 2, '#000'); pRect(3, headY-2, 2, 2, '#000'); }
+    pLine(-2, headY-10, -2, headY-13, '#000', 1); pLine(0, headY-10, 0, headY-14, '#000', 1); pLine(2, headY-10, 2, headY-13, '#000', 1);
+    const pulse = 1 + 0.15*Math.sin(t*4); pHeart(8, headY+1, 6*pulse, '#ff4d6d');
+    ctx.restore();
+  }
+
+  function drawFloatingHearts(dt) {
+    heartTimer += dt; if (heartTimer > 0.25 && !reduceMotion) { heartTimer = 0; spawnHeart(); }
+    for (let i = hearts.length-1; i >= 0; i--) { const h = hearts[i]; h.y -= h.vy; h.life += dt; const alpha = Math.max(0, 1 - h.life*0.6); ctx.save(); ctx.globalAlpha = alpha; pHeart(h.x, h.y, h.s, '#ff4d6d'); ctx.restore(); if (h.y < -10 || h.life > 2.2) hearts.splice(i,1); }
+  }
+
+  let last = performance.now()/1000, running = true;
+  const toggleBtn = document.getElementById('toggleAnim');
+  toggleBtn.addEventListener('click', () => { running = !running; toggleBtn.textContent = running ? 'Pause' : 'Play'; toggleBtn.setAttribute('aria-pressed', String(!running)); if (running) { last = performance.now()/1000; requestAnimationFrame(loop); } });
+
+  function loop(nowMs) {
+    const now = nowMs/1000, dt = Math.min(0.033, Math.max(0, now - last)); last = now; const t = now;
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,BASE_W,BASE_H);
+    pText('WILL YOU  BE MINE', BASE_W/2, 4, '#111', 'center', 8);
+    drawStickFigure(t);
+    pText('ON THIS  VALENTINE', BASE_W/2, BASE_H-16, '#111', 'center', 8);
+    drawFloatingHearts(dt);
+    sctx.clearRect(0,0,screen.width,screen.height); sctx.imageSmoothingEnabled = false; sctx.drawImage(px, 0, 0, screen.width, screen.height);
+    if (running) requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
