@@ -1,22 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="en"><head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Surprise for Butku! — Countdown</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
   <nav>
   <div class="wrap">
-    <a href="index.html">Home</a>
-    <a href="story.html">Our Story</a>
-    <a href="gallery.html">Gallery</a>
-    <a href="playlist.html">Playlist</a>
-    <a href="letter.html">Love Letter</a>
-    <a href="countdown.html">Countdown</a>
+    <div class="brand">Butku ❤ Bandar</div>
+    <button class="nav-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Toggle menu">☰ Menu</button>
+    <div class="links" id="nav-links">
+      <a href="index.html">Home</a>
+      <a href="story.html">Our Story</a>
+      <a href="gallery.html">Gallery</a>
+      <a href="playlist.html">Playlist</a>
+      <a href="letter.html">Love Letter</a>
+      <a href="countdown.html">Countdown</a>
+      <a href="pixel-valentine.html">Pixel Art</a>
+    </div>
   </div>
 </nav>
+  <div class="breadcrumb"><a href="index.html">Home</a> • <a href="story.html">Our Story</a> • <a href="gallery.html">Gallery</a> • <a href="playlist.html">Playlist</a> • <a href="letter.html">Love Letter</a> • <span aria-current="page" style="color:var(--muted)">Countdown</span> • <a href="pixel-valentine.html">Pixel Art</a></div>
   <main class="main">
     <section class="card">
       <h1 style="color:var(--pink); margin-top:0">Counting down to Valentine’s Day ⏳❤️</h1>
@@ -27,9 +31,12 @@
         <div class="count"><div class="num" id="s">0</div><div>Seconds</div></div>
       </div>
       <p>When the timer hits zero, it’s officially cuddle o’clock. 🥰</p>
+      <div class="nav-flow">
+      <a class="btn btn-outline" href="letter.html">← ← Love Letter</a>
+      <a class="btn btn-primary" href="index.html">Back to Home → →</a>
+    </div>
     </section>
   </main>
   <footer>Made with ❤️ by Siddharth • 2026</footer>
-  <script src="script.js"></script>
-</body>
-</html>
+  <script src="script.js?v=3"></script>
+</body></html>
