@@ -1,35 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="en"><head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Surprise for Butku! — Our Story</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
   <nav>
   <div class="wrap">
-    <a href="index.html">Home</a>
-    <a href="story.html">Our Story</a>
-    <a href="gallery.html">Gallery</a>
-    <a href="playlist.html">Playlist</a>
-    <a href="letter.html">Love Letter</a>
-    <a href="countdown.html">Countdown</a>
+    <div class="brand">Butku ❤ Bandar</div>
+    <button class="nav-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Toggle menu">☰ Menu</button>
+    <div class="links" id="nav-links">
+      <a href="index.html">Home</a>
+      <a href="story.html">Our Story</a>
+      <a href="gallery.html">Gallery</a>
+      <a href="playlist.html">Playlist</a>
+      <a href="letter.html">Love Letter</a>
+      <a href="countdown.html">Countdown</a>
+      <a href="pixel-valentine.html">Pixel Art</a>
+    </div>
   </div>
 </nav>
+  <div class="breadcrumb"><a href="index.html">Home</a> • <span aria-current="page" style="color:var(--muted)">Our Story</span> • <a href="gallery.html">Gallery</a> • <a href="playlist.html">Playlist</a> • <a href="letter.html">Love Letter</a> • <a href="countdown.html">Countdown</a> • <a href="pixel-valentine.html">Pixel Art</a></div>
   <main class="main">
     <section class="card">
       <h1 style="color:var(--pink); margin-top:0">Our Story 📖</h1>
       <p>A tiny timeline of the moments that made us <strong>us</strong>. Replace the placeholders with your real dates & memories. ✨</p>
       <div class="timeline">
-        <div class="milestone"><strong>Day we first talked</strong><br><em>10 Jul 2025</em><br>That first hi that didn’t feel like a first.</div>
-        <div class="milestone"><strong>First date</strong><br><em>25 Aug 2025</em><br>Butterflies, laughter, and way too many inside jokes.</div>
-        <div class="milestone"><strong>The nickname “Butku & Bandar”</strong><br><em>01 Jan 2026</em><br>And it stuck—forever adorable.</div>
-        <div class="milestone"><strong>Big moment</strong><br><em>02 Feb 2026</em><br>We knew we were in this together. ❤️</div>
+        <div class="milestone"><strong>Day we first talked</strong><br><em>DD MMM YYYY</em><br>That first hi that didn’t feel like a first.</div>
+        <div class="milestone"><strong>First date</strong><br><em>DD MMM YYYY</em><br>Butterflies, laughter, and way too many inside jokes.</div>
+        <div class="milestone"><strong>The nickname “Butku & Bandar”</strong><br><em>DD MMM YYYY</em><br>And it stuck—forever adorable.</div>
+        <div class="milestone"><strong>Big moment</strong><br><em>DD MMM YYYY</em><br>We knew we were in this together. ❤️</div>
       </div>
+      <div class="nav-flow">
+      <a class="btn btn-outline" href="index.html">← Back to Home</a>
+      <a class="btn btn-primary" href="gallery.html">See our Gallery →</a>
+    </div>
     </section>
   </main>
   <footer>Made with ❤️ by Siddharth • 2026</footer>
-  <script src="script.js"></script>
-</body>
-</html>
+  <script src="script.js?v=3"></script>
+</body></html>
