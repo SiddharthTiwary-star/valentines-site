@@ -4,40 +4,48 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Surprise for Butku! — Home</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta name="theme-color" content="#ff4d6d">
+  <link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
   <nav>
   <div class="wrap">
-    <a href="index.html">Home</a>
-    <a href="story.html">Our Story</a>
-    <a href="gallery.html">Gallery</a>
-    <a href="playlist.html">Playlist</a>
-    <a href="letter.html">Love Letter</a>
-    <a href="countdown.html">Countdown</a>
+    <div class="brand">Butku ❤ Bandar</div>
+    <button class="nav-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Toggle menu">☰ Menu</button>
+    <div class="links" id="nav-links">
+      <a href="index.html">Home</a>
+      <a href="story.html">Our Story</a>
+      <a href="gallery.html">Gallery</a>
+      <a href="playlist.html">Playlist</a>
+      <a href="letter.html">Love Letter</a>
+      <a href="countdown.html">Countdown</a>
+      <a href="pixel-valentine.html">Pixel Art</a>
+    </div>
   </div>
 </nav>
   <main class="main">
     <section class="card hero" id="mainContainer">
-      <h1>Will you be my valentine? 💖</h1>
+      <h1>Will you be my Valentine? 💖</h1>
+      <p class="sub">Catch the <strong>“No”</strong> if you can… or simply say <strong>Yes</strong>. 😉</p>
       <div class="btn-group">
         <button class="btn btn-primary" id="yesBtn" onclick="showSuccess()">Yes, I am already yours valentine</button>
-        <button class="btn btn-ghost" id="noBtn">No</button>
+        <button class="btn btn-ghost" id="noBtn" aria-label="No">No</button>
       </div>
+      <a id="hint" class="hint">(Hint: Tap here if you can’t find the No button)</a>
       <div id="popup">Do you really think you have an option, you butku bandar</div>
     </section>
 
     <section class="card" id="successCard">
-      <h2 style="color: var(--pink);">Congratulations! 🎉</h2>
+      <h2 style="color:var(--pink)">Congratulations! 🎉</h2>
       <p style="font-size: 20px;">Bandar, you never had an option!<br>It's a good thing you finally came to realisations. 🐒</p>
       <p style="font-size: 24px; font-weight: bold;">I love you a lot, butku! ❤️</p>
-      <p>
-        Explore the rest of the surprise ➜
-        <a class="btn btn-primary" href="story.html">Our Story</a>
+      <p style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap">
+        <a class="btn btn-primary" href="story.html">Start with Our Story</a>
+        <a class="btn btn-outline" href="pixel-valentine.html">Try the Pixel Valentine</a>
       </p>
     </section>
   </main>
   <footer>Made with ❤️ by Siddharth • 2026</footer>
-  <script src="script.js"></script>
+  <script src="script.js?v=3"></script>
 </body>
 </html>
